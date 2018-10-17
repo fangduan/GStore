@@ -49,6 +49,27 @@ cat_cols = [c for c in cat_cols if c not in ID_cols]
 num_cols.remove('trafficSource_adwordsClickInfo.page')
 cat_cols.append('trafficSource_adwordsClickInfo.page')
 
+#### fill NAs
+# drop features with na_percentage > 90%, add indicator_NA feature later
+drop_cols = ['trafficSource_adContent',
+             'trafficSource_adwordsClickInfo.slot',
+             'trafficSource_adwordsClickInfo.adNetworkType',
+             'trafficSource_adwordsClickInfo.isVideoAd',
+             'trafficSource_adwordsClickInfo.page',
+             'trafficSource_adwordsClickInfo.gclId']
+#
+for df in [train, test]:
+    df['trafficSource_isTrueDirect'].fillna('missing', inplace = True)
+    df['trafficSource_referralPath'].fillna('missing', inplace = True)
+    df['trafficSource_keyword'].fillna('missing', inplace = True)
+    df['totals_bounces'].fillna(0.0, inplace = True)
+    df['totals_newVisits'].fillna(0.0, inplace = True)
+    df['totals_pageviews'].fillna(0.0, inplace = True)
+
+train = train.drop(columns = drop_cols)
+test = test.drop(columns = drop_cols)
+
+# encoder
 for c in cat_cols:
     le = LabelEncoder()
     train_vals = list(train[c].values.astype(str))
