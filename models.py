@@ -1,5 +1,5 @@
 from attrdict import AttrDict
-
+from sklearn import linear_model
 import numpy as np
 import pandas as pd
 import lightgbm as lgb
@@ -37,3 +37,11 @@ class LightGBM:
     def transform(self, X, **kwargs):
         prediction = self.estimator.predict(X, num_iteration = self.estimator.best_iteration)
         return {'prediction': prediction}
+
+class SklearnLasso:
+    def __init__(self, name = None, **params):
+        self.params = params
+    def fit_transform(self, X, y, X_valid, y_valid, **kwargs):
+        la = linear_model.Lasso(self.params)
+        self.estimator = la.fit(X, y, **kwargs)
+        return self
