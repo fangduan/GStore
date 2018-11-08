@@ -2,22 +2,28 @@ import os
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
+from sklearn import linear_model
+from sklearn.model_selection import GroupKFold, KFold, train_test_split
+from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 import gc
 gc.enable()
 import preprocess
+import utils
+import models
 
 train = pd.read_csv("~/Documents/Database/GStore/train_flatten.csv",dtype={'fullVisitorId': np.str})
 test = pd.read_csv("~/Documents/Database/GStore/test_flatten.csv",dtype={'fullVisitorId': np.str})
+train.shape, test.shape
 
+random_seed = 1024
 ########################## Preprocessing #######################################
 #### remove constant features
 train = preprocess.rmConstant(train)
 test = preprocess.rmConstant(test)
-train.shape
-test.shape
+train.shape, test.shape
 set(train.columns) - set(test.columns)
-train = train.drop(columns = 'trafficSource_campaignCode')
+train = train.drop(columns = 'trafficSource_campaignCode') # this column only exists in train set
 
 # Identify numeric & categorical features
 num_cols, cat_cols = preprocess.col_dtypes(train)
@@ -65,10 +71,11 @@ for df in [train, test]:
     df['totals_bounces'].fillna(0.0, inplace = True)
     df['totals_newVisits'].fillna(0.0, inplace = True)
     df['totals_pageviews'].fillna(0.0, inplace = True)
-
+del df
 train = train.drop(columns = drop_cols)
 test = test.drop(columns = drop_cols)
 
+cat_cols = [c for c in cat_cols if c not in drop_cols]
 # encoder
 for c in cat_cols:
     le = LabelEncoder()
@@ -81,3 +88,6 @@ for c in cat_cols:
 train[target_cols] = train[target_cols].fillna(0).astype('float')
 train_idx = train['fullVisitorId']
 test_idx = test['fullVisitorId']
+TARGET = np.log1p(train['totals_transactionRevenue'].values)
+train_X = train[num_cols + cat_cols].copy()
+test_X = test[num_cols + cat_cols].copy()
